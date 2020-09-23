@@ -5,6 +5,7 @@
 		<link rel="stylesheet" href="index.css">
 		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 		<script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
+		<script src="function.js"></script>
 		<title>textAlive</title>
 	</head>
 	<body>
@@ -17,39 +18,15 @@
 						<td id="font_size_num">0</td>
 					</tr>
 					<tr>
-						<th>文字生成初期位置</th>
-						<td><input type="range" id="char_init_pos" value="0"></td>
-						<td id="char_init_pos_num">0</td>
-					</tr>
-					<tr>
-						<th>スクロール速度</th>
-						<td><input type="range" id="scroll_speed" value="0"></td>
-						<td id="scroll_speed_num">0</td>
-					</tr>
-					<tr>
-						<th>文字生成位置範囲</th>
-						<td><input type="range" id="char_range" value="0"></td>
-						<td id="char_range_num">0</td>
-					</tr>
-					<tr>
 						<th>フォントの色</th>
 						<td><input type="text" id="font_color" value="#000000"></td>
-					</tr>
-					<tr>
-						<th>文字の揺れ幅</th>
-						<td><input type="range" id="char_swing" value="0"></td>
-						<td id="char_swing_num">0</td>
-					</tr>
-					<tr>
-						<th>文字の揺れ幅周期</th>
-						<td><input type="range" id="char_cycle" value="0"></td>
-						<td id="char_cycle_num">0</td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
 		<div id="container"></div>
 		<div id="media"></div>
+		<script src="init.js"></script>
 		<script src="textAlive.js"></script>
 	</body>
 </html>
