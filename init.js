@@ -17,11 +17,12 @@ resize();
 //デフォルト値
 const DEFAULT_FONT_SIZE = 160; //フォントサイズ(px)
 const DEFAULT_FONT_COLOR = "#00FF88"; //フォントの色
-const DEFAULT_DURATION = 200; //文字出現までの時間(ms)
+const DEFAULT_DURATION = 700; //文字出現までの時間(ms)
 const DEFAULT_WAIT = 60; //文字を表示する時間(f)
 
 //現在値
 let fontSize = DEFAULT_FONT_SIZE;
+let halfFontSize = fontSize / 2;
 let fontColor = DEFAULT_FONT_COLOR;
 let duration = DEFAULT_DURATION;
 let wait = DEFAULT_WAIT;

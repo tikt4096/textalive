@@ -44,6 +44,7 @@ class Particle{
 		this.status = initStatus;
 		this.ctx = ctx;
 		this.lifeTime = 20;
+		this.count = Date.now();
 	}
 
 	update(){
@@ -52,16 +53,15 @@ class Particle{
 		ctx.beginPath();
 		ctx.arc(this.x,this.y,5,0,Math.PI * 2,false);
 		ctx.fill();
-		this.x += this.vx;
-		this.y += this.vy;
-		this.vy += 0.4;
 		if(this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height){
 			this.status = PARTICLE_DESTROY;
 		}
 
 		switch(this.status){
 			case PARTICLE_RISE:
-				if(this.y < this.targetYPos || this.vy > 0){
+				let p = Ease.circOut((Date.now() - this.count) / duration);
+				this.y = p * this.targetYPos + (1 - p) * canvas.height;
+				if(p > 0.9){
 					this.status = PARTICLE_PEEK;
 				}
 				break;
@@ -74,7 +74,7 @@ class Particle{
 			case PARTICLE_EXPLOSION:
 				for(let i = 0;i < PARTICLE_COUNT;i++){
 					let ang = Math.PI * Math.floor(Math.random() * 360) / 180;
-					let speed = Math.floor(Math.random() * 100);
+					let speed = rand(5,15);
 					let vx = Math.cos(ang) * speed;
 					let vy = Math.sin(ang) * speed;
 					particle.push(new Particle(this.x,this.y,vx,vy,0,null,this.ctx,PARTICLE_EXPMOVE));
@@ -82,6 +82,9 @@ class Particle{
 				this.status = PARTICLE_DESTROY;
 				break;
 			case PARTICLE_EXPMOVE:
+				this.x += this.vx;
+				this.y += this.vy;
+				this.vy += 0.4;
 				this.lifeTime--;
 				if(this.lifeTime <= 0){
 					this.status = PARTICLE_DESTROY;
@@ -162,11 +165,11 @@ function animation(){
 	if(c !== null){
 		let index = player.video.findIndex(c);
 		if(currentLyricIndex != index){
-			let cx = Math.floor(Math.random() * (canvas.width - fontSize / 2 + 1));
+			let cx = rand(halfFontSize,canvas.width - halfFontSize);
 			let cy = canvas.height;
-			let targetYPos = Math.floor(Math.random() * (cy - fontSize / 2 + 1)); //最終的に到達する座標
-			let vy = -((cy - targetYPos) / duration * 16.67); //1フレームあたりに進む距離(1フレーム=大体16.67ms)
-			particle.push(new Particle(cx,cy,0,vy,targetYPos,c,context,PARTICLE_RISE));
+			let targetYPos = rand(halfFontSize,canvas.height - halfFontSize); //最終的に到達する座標
+			//let vy = -((cy - targetYPos) / duration * 16.67); //1フレームあたりに進む距離(1フレーム=大体16.67ms)
+			particle.push(new Particle(cx,cy,0,0,targetYPos,c,context,PARTICLE_RISE));
 			currentLyricIndex = index;
 		}
 	}
@@ -198,6 +201,7 @@ function onAppParameterUpdate(name,value){
 	switch(name){
 		case "fontSize":
 			fontSize = parseInt(value);
+			halfFontSize = fontSize / 2;
 			context.font = fontSize + "px sans-serif";
 			break;
 		case "fontColor":
