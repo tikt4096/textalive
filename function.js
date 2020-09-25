@@ -5,7 +5,12 @@ function colorToString(color){
 		let b = zeroPad(color.b.toString(16),2);
 		return "#" + r + g + b;
 	}
-	return color;
+
+	if(/^#[0-9a-fA-F]{6}$/.test(color) || /^#[0-9a-fA-F]{3}$/.test(color)){
+		return color;
+	}else{
+		return "#FFFFFF";
+	}
 }
 
 function zeroPad(num,digit){

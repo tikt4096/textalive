@@ -1,6 +1,7 @@
 let lyrics = []; //歌詞を格納する配列
 let particle = [];
 let prevChar;
+let initX = halfFontSize;
 
 //文字の一文字の情報を保持
 class Character{
@@ -9,88 +10,149 @@ class Character{
 		this.y = y;
 		this.char = char;
 		this.isRemove = false;
-		this.count = 0;
+		this.lifeTime = lifeTime;
+		this.size = 0;
 		this.ctx = ctx;
 	}
 
 	update(){
-		let defColor = this.ctx.fillStyle;
-		this.ctx.fillStyle = fontColor;
-		this.ctx.fillText(this.char,this.x,this.y);
-		if(this.count >= wait){
+		let ctx = this.ctx;
+		let defColor = ctx.fillStyle;
+		ctx.fillStyle = fontColor;
+		if(this.lifeTime >= lifeTime - FADE_IN_TIME){
+			let p = Ease.circOut((lifeTime - this.lifeTime) / FADE_IN_TIME);
+			this.size = fontSize * p;
+			ctx.globalAlpha = p;
+		}else if(this.lifeTime <= FADE_OUT_TIME){
+			let p = Ease.circOut(this.lifeTime / FADE_OUT_TIME);
+			this.size = fontSize * p + fontSize * 1.3 * (1 - p);
+			ctx.globalAlpha = p;
+		}else{
+			this.size = fontSize;
+			ctx.globalAlpha = 1.0;
+		}
+
+		ctx.font = this.size + "px " + fontFamily;
+		ctx.fillText(this.char,this.x,this.y);
+		if(this.lifeTime <= 0){
 			this.isRemove = true;
 		}
-		this.count++;
-		this.ctx.fillStyle = defColor;
+		this.lifeTime--;
+		ctx.fillStyle = defColor;
+		ctx.globalAlpha = 1.0;
 	}
 }
 
-const PARTICLE_COUNT = 100;
-
-const PARTICLE_RISE = 0;
-const PARTICLE_PEEK = 1;
-const PARTICLE_EXPLOSION = 2;
-const PARTICLE_DESTROY = 3;
-const PARTICLE_EXPMOVE = 4;
+const PARTICLE_COUNT = 120;
+const PARTICLE_COLOR = [
+	"#ff8800",
+	"#00ff88",
+	"#ff00ff",
+	"#ffffff",
+	"#eeff88",
+	"#ffee00"
+];
 
 class Particle{
-	constructor(x,y,vx,vy,targetYPos,c,ctx,initStatus){
+	constructor(x,y,vx,vy,color,ctx){
 		this.x = x;
 		this.y = y;
 		this.vx = vx;
 		this.vy = vy;
-		this.targetYPos = targetYPos;
-		this.char = c;
-		this.status = initStatus;
+		this.color = color;
 		this.ctx = ctx;
-		this.lifeTime = 20;
-		this.count = Date.now();
+		this.lifeTime = 100;
+		this.isRemove = false;
 	}
 
 	update(){
 		let ctx = this.ctx;
 
-		ctx.beginPath();
-		ctx.arc(this.x,this.y,5,0,Math.PI * 2,false);
-		ctx.fill();
-		if(this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height){
-			this.status = PARTICLE_DESTROY;
+		if(this.lifeTime < 50)ctx.globalAlpha = this.lifeTime / 50;
+		else ctx.globalAlpha = 1.0;
+
+		this.x += this.vx;
+		this.y += this.vy;
+		this.vy += 0.2;
+		this.lifeTime--;
+		if(this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height || this.lifeTime <= 0){
+			this.isRemove = true;
 		}
 
-		switch(this.status){
-			case PARTICLE_RISE:
-				let p = Ease.circOut((Date.now() - this.count) / duration);
-				this.y = p * this.targetYPos + (1 - p) * canvas.height;
-				if(p > 0.9){
-					this.status = PARTICLE_PEEK;
-				}
-				break;
-			case PARTICLE_PEEK:
-				if(this.char !== null){
-					lyrics.push(new Character(this.x - fontSize / 2,this.y - fontSize / 2,this.char,this.ctx));
-				}
-				this.status = PARTICLE_EXPLOSION;
-				break;
-			case PARTICLE_EXPLOSION:
-				for(let i = 0;i < PARTICLE_COUNT;i++){
-					let ang = Math.PI * Math.floor(Math.random() * 360) / 180;
-					let speed = rand(5,15);
-					let vx = Math.cos(ang) * speed;
-					let vy = Math.sin(ang) * speed;
-					particle.push(new Particle(this.x,this.y,vx,vy,0,null,this.ctx,PARTICLE_EXPMOVE));
-				}
-				this.status = PARTICLE_DESTROY;
-				break;
-			case PARTICLE_EXPMOVE:
-				this.x += this.vx;
-				this.y += this.vy;
-				this.vy += 0.4;
-				this.lifeTime--;
-				if(this.lifeTime <= 0){
-					this.status = PARTICLE_DESTROY;
-				}
-				break;
+		if(rand(0,100) < 60){
+			ctx.beginPath();
+			ctx.fillStyle = this.color;
+			ctx.arc(this.x,this.y,2,0,Math.PI * 2,false);
+			ctx.fill();
+			if(this.lifeTime % 2 === 0)particle.push(new Afterimage(this.x,this.y,this.color,2,this.ctx));
 		}
+		ctx.globalAlpha = 1.0;
+	}
+}
+
+class Fire{
+	constructor(x,y,targetYPos,char,ctx){
+		this.x = x;
+		this.y = y;
+		this.targetYPos = targetYPos;
+		this.char = char;
+		this.ctx = ctx;
+		this.count = Date.now();
+		this.color = PARTICLE_COLOR[rand(0,PARTICLE_COLOR.length - 1)];
+		this.isRemove = false;
+		this.frameCount = 0;
+	}
+
+	update(){
+		let p = Ease.circOut((Date.now() - this.count) / duration);
+		this.y = p * this.targetYPos + (1 - p) * canvas.height;
+		if(this.frameCount % 2 === 0)particle.push(new Afterimage(this.x,this.y,this.color,5,this.ctx));
+
+		if(p > 0.9){
+			lyrics.push(new Character(this.x,this.y,this.char,this.ctx));
+			let color;
+			for(let i = 0;i < PARTICLE_COUNT;i++){
+				let ang = Math.PI * Math.floor(Math.random() * 360) / 180;
+				let speed = rand(5,10);
+				let vx = Math.cos(ang) * speed;
+				let vy = Math.sin(ang) * speed;
+				if(i % (PARTICLE_COUNT / 3) === 0){
+					color = PARTICLE_COLOR[rand(0,PARTICLE_COLOR.length - 1)];
+				}
+				particle.push(new Particle(this.x,this.y,vx,vy,color,this.ctx));
+			}
+			this.isRemove = true;
+		}
+
+		let ctx = this.ctx;
+		ctx.beginPath();
+		ctx.fillStyle = this.color;
+		ctx.arc(this.x,this.y,5,0,Math.PI * 2,false);
+		ctx.fill();
+		this.frameCount++;
+	}
+}
+
+class Afterimage{
+	constructor(x,y,color,radius,ctx){
+		this.x = x;
+		this.y = y;
+		this.color = color;
+		this.lifeTime = 10;
+		this.ctx = ctx;
+		this.radius = radius;
+		this.isRemove = false;
+	}
+
+	update(){
+		let ctx = this.ctx;
+		ctx.globalAlpha = 1.0 * this.lifeTime / 10;
+		ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(this.x,this.y,this.radius,0,Math.PI * 2,false);
+		ctx.fill();
+		if(--this.lifeTime === 0)this.isRemove = true;
+		ctx.globalAlpha = 1.0;
 	}
 }
 
@@ -116,6 +178,10 @@ function onAppReady(app){
 		});
 		fontColorCtl.addEventListener("change",()=>{
 			onAppParameterUpdate("fontColor",fontColorCtl.value);
+		});
+		displayTimeCtl.addEventListener("input",()=>{
+			onAppParameterUpdate("displayTime",displayTimeCtl.value);
+			setNumber(displayTimeCtl);
 		});
 	}
 	if(!app.songUrl){ //デフォルトURL
@@ -161,22 +227,27 @@ let request;
 
 function animation(){
 	context.clearRect(0,0,canvas.width,canvas.height);
+	context.fillStyle = "#000000";
+	context.fillRect(0,0,canvas.width,canvas.height);
 	let c = player.video.findChar(player.timer.position + duration);
 	if(c !== null){
 		let index = player.video.findIndex(c);
 		if(currentLyricIndex != index){
-			let cx = rand(halfFontSize,canvas.width - halfFontSize);
+			let cx = initX;
 			let cy = canvas.height;
 			let targetYPos = rand(halfFontSize,canvas.height - halfFontSize); //最終的に到達する座標
-			//let vy = -((cy - targetYPos) / duration * 16.67); //1フレームあたりに進む距離(1フレーム=大体16.67ms)
-			particle.push(new Particle(cx,cy,0,0,targetYPos,c,context,PARTICLE_RISE));
+			particle.push(new Fire(cx,cy,targetYPos,c,context));
 			currentLyricIndex = index;
+			initX += fontSize;
+			if(initX + halfFontSize > canvas.width){
+				initX = halfFontSize;
+			}
 		}
 	}
 	for(const p of particle){
 		p.update();
 	}
-	particle = particle.filter(par => par.status != PARTICLE_DESTROY); //頂点に達したパーティクルは消去
+	particle = particle.filter(par => !par.isRemove); //頂点に達したか範囲外のパーティクルは消去
 
 	for(const char of lyrics){
 		char.update();
@@ -206,6 +277,10 @@ function onAppParameterUpdate(name,value){
 			break;
 		case "fontColor":
 			fontColor = colorToString(value);
+			break;
+		case "displayTime":
+			wait = parseInt(value);
+			lifeTime = wait + FADE_IN_TIME + FADE_OUT_TIME;
 			break;
 	}
 }
