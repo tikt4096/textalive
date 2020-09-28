@@ -1,160 +1,124 @@
-let lyrics = []; //歌詞を格納する配列
+import * as func from "./function.js";
+import {Fire} from "./fire.js";
+import {Character} from "./character.js";
+import {Particle} from "./particle.js";
+import {Afterimage} from "./afterImage.js";
+
+const {Player,Ease} = TextAliveApp;
+
+const canDiv = document.getElementById("container");
+const canvas = document.createElement("canvas");
+const context = canvas.getContext("2d");
+
+const controll = document.getElementById("controller");
+
+//各コントロール
+const fontSizeCtl = document.getElementById("font_size");
+const fontColorCtl = document.getElementById("font_color");
+const displayTimeCtl = document.getElementById("disply_time");
+
+func.setRange(fontSizeCtl,10,300);
+func.setRange(displayTimeCtl,10,100);
+
+resize();
+
+//デフォルト値
+const DEFAULT_FONT_SIZE = 90; //フォントサイズ(px)
+const DEFAULT_FONT_COLOR = "#00FF88"; //フォントの色
+const DEFAULT_DURATION = 700; //文字出現までの時間(ms)
+const DEFAULT_WAIT = 40; //文字を表示する時間(f)
+const DEFAULT_FONT_FAMILY = "sans-serif"; //使用フォント
+
+//現在値
+let fontSize = DEFAULT_FONT_SIZE;
+let halfFontSize = fontSize / 2;
+let fontColor = DEFAULT_FONT_COLOR;
+let duration = DEFAULT_DURATION;
+let wait = DEFAULT_WAIT;
+let fontFamily = DEFAULT_FONT_FAMILY;
+
+func.setValue(fontSizeCtl,fontSize);
+func.setValue(fontColorCtl,fontColor);
+func.setValue(displayTimeCtl,wait);
+
+const player = new Player({
+	app: {
+		appAuthor: "ToykoItomimizu",
+		appName: "hanabi",
+		parameters:[
+			{
+				title: "フォントサイズ",
+				name: "fontSize",
+				className: "Slider",
+				params: [10,300],
+				initialValue: DEFAULT_FONT_SIZE
+			},
+			{
+				title: "フォントの色",
+				name: "fontColor",
+				className: "Color",
+				initialValue: DEFAULT_FONT_COLOR
+			},
+			{
+				title: "文字の表示時間（フレーム）",
+				name: "displayTime",
+				className: "Slider",
+				params: [10,100],
+				initialValue: DEFAULT_WAIT
+			}
+		]
+	},
+	mediaElement: document.querySelector("#media")
+});
+
+canvasInit();
+canDiv.appendChild(canvas);
+
+let currentLyricIndex = -1;
+
+//リサイズ時のイベント登録
+window.addEventListener("resize",()=>{
+	resize();
+	canvasInit();
+});
+
+function canvasInit(){
+	context.textAlign = "center";
+	context.textBaseline = "middle";
+	context.font = fontSize + "px " + fontFamily;
+}
+
+function resize(){
+	canvas.width = canDiv.clientWidth;
+	canvas.height = document.documentElement.clientHeight;
+	Fire.setCanvasHeight(canvas.height);
+	Particle.setCanvasWidth(canvas.width);
+	Particle.setCanvasHeight(canvas.height);
+}
+
 let particle = [];
-let prevChar;
 let initX = halfFontSize;
 
-//文字の一文字の情報を保持
-class Character{
-	constructor(x,y,char,ctx){
-		this.x = x;
-		this.y = y;
-		this.char = char;
-		this.isRemove = false;
-		this.lifeTime = lifeTime;
-		this.size = 0;
-		this.ctx = ctx;
-	}
+Fire.init({
+	canvasWidth: canvas.width,
+	canvasHeight: canvas.height,
+	easeFunc: Ease.circOut,
+	charInfo:{
+		wait: wait,
+		color: fontColor,
+		size: fontSize,
+		family: fontFamily
+	},
+	particleFunc: addParticle,
+	characterFunc: addCharacter,
+	afterimageFunc: addAfterimage
+});
 
-	update(){
-		let ctx = this.ctx;
-		let defColor = ctx.fillStyle;
-		ctx.fillStyle = fontColor;
-		if(this.lifeTime >= lifeTime - FADE_IN_TIME){
-			let p = Ease.circOut((lifeTime - this.lifeTime) / FADE_IN_TIME);
-			this.size = fontSize * p;
-			ctx.globalAlpha = p;
-		}else if(this.lifeTime <= FADE_OUT_TIME){
-			let p = Ease.circOut(this.lifeTime / FADE_OUT_TIME);
-			this.size = fontSize * p + fontSize * 1.3 * (1 - p);
-			ctx.globalAlpha = p;
-		}else{
-			this.size = fontSize;
-			ctx.globalAlpha = 1.0;
-		}
-
-		ctx.font = this.size + "px " + fontFamily;
-		ctx.fillText(this.char,this.x,this.y);
-		if(this.lifeTime <= 0){
-			this.isRemove = true;
-		}
-		this.lifeTime--;
-		ctx.fillStyle = defColor;
-		ctx.globalAlpha = 1.0;
-	}
-}
-
-const PARTICLE_COUNT = 120;
-const PARTICLE_COLOR = [
-	"#ff8800",
-	"#00ff88",
-	"#ff00ff",
-	"#ffffff",
-	"#eeff88",
-	"#ffee00"
-];
-
-class Particle{
-	constructor(x,y,vx,vy,color,ctx){
-		this.x = x;
-		this.y = y;
-		this.vx = vx;
-		this.vy = vy;
-		this.color = color;
-		this.ctx = ctx;
-		this.lifeTime = 100;
-		this.isRemove = false;
-	}
-
-	update(){
-		let ctx = this.ctx;
-
-		if(this.lifeTime < 50)ctx.globalAlpha = this.lifeTime / 50;
-		else ctx.globalAlpha = 1.0;
-
-		this.x += this.vx;
-		this.y += this.vy;
-		this.vy += 0.2;
-		this.lifeTime--;
-		if(this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height || this.lifeTime <= 0){
-			this.isRemove = true;
-		}
-
-		if(rand(0,100) < 60){
-			ctx.beginPath();
-			ctx.fillStyle = this.color;
-			ctx.arc(this.x,this.y,2,0,Math.PI * 2,false);
-			ctx.fill();
-			if(this.lifeTime % 2 === 0)particle.push(new Afterimage(this.x,this.y,this.color,2,this.ctx));
-		}
-		ctx.globalAlpha = 1.0;
-	}
-}
-
-class Fire{
-	constructor(x,y,targetYPos,char,ctx){
-		this.x = x;
-		this.y = y;
-		this.targetYPos = targetYPos;
-		this.char = char;
-		this.ctx = ctx;
-		this.count = Date.now();
-		this.color = PARTICLE_COLOR[rand(0,PARTICLE_COLOR.length - 1)];
-		this.isRemove = false;
-		this.frameCount = 0;
-	}
-
-	update(){
-		let p = Ease.circOut((Date.now() - this.count) / duration);
-		this.y = p * this.targetYPos + (1 - p) * canvas.height;
-		if(this.frameCount % 2 === 0)particle.push(new Afterimage(this.x,this.y,this.color,5,this.ctx));
-
-		if(p > 0.9){
-			lyrics.push(new Character(this.x,this.y,this.char,this.ctx));
-			let color;
-			for(let i = 0;i < PARTICLE_COUNT;i++){
-				let ang = Math.PI * Math.floor(Math.random() * 360) / 180;
-				let speed = rand(5,10);
-				let vx = Math.cos(ang) * speed;
-				let vy = Math.sin(ang) * speed;
-				if(i % (PARTICLE_COUNT / 3) === 0){
-					color = PARTICLE_COLOR[rand(0,PARTICLE_COLOR.length - 1)];
-				}
-				particle.push(new Particle(this.x,this.y,vx,vy,color,this.ctx));
-			}
-			this.isRemove = true;
-		}
-
-		let ctx = this.ctx;
-		ctx.beginPath();
-		ctx.fillStyle = this.color;
-		ctx.arc(this.x,this.y,5,0,Math.PI * 2,false);
-		ctx.fill();
-		this.frameCount++;
-	}
-}
-
-class Afterimage{
-	constructor(x,y,color,radius,ctx){
-		this.x = x;
-		this.y = y;
-		this.color = color;
-		this.lifeTime = 10;
-		this.ctx = ctx;
-		this.radius = radius;
-		this.isRemove = false;
-	}
-
-	update(){
-		let ctx = this.ctx;
-		ctx.globalAlpha = 1.0 * this.lifeTime / 10;
-		ctx.fillStyle = this.color;
-		ctx.beginPath();
-		ctx.arc(this.x,this.y,this.radius,0,Math.PI * 2,false);
-		ctx.fill();
-		if(--this.lifeTime === 0)this.isRemove = true;
-		ctx.globalAlpha = 1.0;
-	}
-}
+Particle.init({
+	canvasWidth: canvas.width,
+	canvasHeight: canvas.height,
+	afterimageFunc: addAfterimage
+});
 
 //イベント関連
 player.addListener({
@@ -174,14 +138,14 @@ function onAppReady(app){
 		//イベントリスナ登録
 		fontSizeCtl.addEventListener("input",()=>{
 			onAppParameterUpdate("fontSize",fontSizeCtl.value);
-			setNumber(fontSizeCtl);
+			func.setNumber(fontSizeCtl);
 		});
 		fontColorCtl.addEventListener("change",()=>{
 			onAppParameterUpdate("fontColor",fontColorCtl.value);
 		});
 		displayTimeCtl.addEventListener("input",()=>{
 			onAppParameterUpdate("displayTime",displayTimeCtl.value);
-			setNumber(displayTimeCtl);
+			func.setNumber(displayTimeCtl);
 		});
 	}
 	if(!app.songUrl){ //デフォルトURL
@@ -189,8 +153,7 @@ function onAppReady(app){
 	}
 }
 
-//let lyrics = [];
-/*
+/*let lyrics = [];
 function onTimerReady(){
 	let char = player.video.firstChar;
 	while(char && char.next){
@@ -235,8 +198,8 @@ function animation(){
 		if(currentLyricIndex != index){
 			let cx = initX;
 			let cy = canvas.height;
-			let targetYPos = rand(halfFontSize,canvas.height - halfFontSize); //最終的に到達する座標
-			particle.push(new Fire(cx,cy,targetYPos,c,context));
+			let targetYPos = func.rand(halfFontSize,canvas.height - halfFontSize); //最終的に到達する座標
+			particle.push(new Fire(cx,cy,targetYPos,c,duration,context));
 			currentLyricIndex = index;
 			initX += fontSize;
 			if(initX + halfFontSize > canvas.width){
@@ -248,12 +211,19 @@ function animation(){
 		p.update();
 	}
 	particle = particle.filter(par => !par.isRemove); //頂点に達したか範囲外のパーティクルは消去
-
-	for(const char of lyrics){
-		char.update();
-	}
-	lyrics = lyrics.filter(char => !char.isRemove); //範囲外の文字は消去
 	request = requestAnimationFrame(animation);
+}
+
+function addAfterimage(x,y,color,radius,ctx){
+	particle.push(new Afterimage(x,y,color,radius,ctx));
+}
+
+function addCharacter(x,y,char,charInfo,ease,ctx){
+	particle.push(new Character(x,y,char,charInfo,ease,ctx));
+}
+
+function addParticle(x,y,vx,vy,color,ctx){
+	particle.push(new Particle(x,y,vx,vy,color,ctx));
 }
 
 function onPlay(){
@@ -276,11 +246,16 @@ function onAppParameterUpdate(name,value){
 			context.font = fontSize + "px sans-serif";
 			break;
 		case "fontColor":
-			fontColor = colorToString(value);
+			fontColor = func.colorToString(value);
 			break;
 		case "displayTime":
 			wait = parseInt(value);
-			lifeTime = wait + FADE_IN_TIME + FADE_OUT_TIME;
 			break;
 	}
+	Fire.setCharInfo({
+			wait: wait,
+			size: fontSize,
+			color: fontColor,
+			family: fontFamily
+	});
 }
