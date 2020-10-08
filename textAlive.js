@@ -123,8 +123,6 @@ Particle.init({
 //イベント関連
 player.addListener({
 	onAppReady,
-	//onTimerReady,
-	//onTimeUpdate,
 	onPlay,
 	onPause,
 	onStop,
@@ -153,45 +151,12 @@ function onAppReady(app){
 	}
 }
 
-/*let lyrics = [];
-function onTimerReady(){
-	let char = player.video.firstChar;
-	while(char && char.next){
-		lyrics.push(char);
-		char = char.next;
-	}
-}
-
-function onTimeUpdate(position){
-	let c = player.video.findChar(position);
-	if(c !== null){
-		let index = player.video.findIndex(c);
-
-		if(currentLyricIndex != index){
-			let cx = initXPos,cy;
-			if(lyrics.length === 0){
-				cy = Math.floor(Math.random() * (canvas.height - fontSize));
-			}else{
-				let min = Math.max(prevChar.baseY - nextRange,0);
-				let max = Math.min(prevChar.baseY + nextRange,canvas.height - fontSize);
-				cy = Math.floor(Math.random() * (max + 1 - min)) + min;
-				if(prevChar.x + fontSize > initXPos){
-					cx += prevChar.x + fontSize - initXPos;
-				}
-			}
-			lyrics.push(new Character(cx,cy,c.text));
-			prevChar = lyrics[lyrics.length - 1];
-			currentLyricIndex = index;
-		}
-	}
-}*/
-
 let request;
 
 function animation(){
 	context.clearRect(0,0,canvas.width,canvas.height);
 	context.fillStyle = "#000000";
-	context.fillRect(0,0,canvas.width,canvas.height);
+	context.fillRect(0,0,canvas.width,canvas.height); //背景
 	let c = player.video.findChar(player.timer.position + duration);
 	if(c !== null){
 		let index = player.video.findIndex(c);
