@@ -1,5 +1,5 @@
 import {Mosaic} from "./mosaic.js";
-//import * as func from "./function.js";
+import * as func from "./function.js";
 
 //文字がフェードイン・アウトする時間(f)
 const FADE_IN_TIME = 30;
@@ -31,7 +31,6 @@ export class Character{
 		let ctx = this.ctx;
 		let defColor = ctx.fillStyle;
 		let defAlpha = ctx.globalAlpha;
-		ctx.fillStyle = this.fontColor;
 		if(this.lifeTime >= this.maxLifeTime - FADE_IN_TIME){
 			let p = this.easeFunc((this.maxLifeTime - this.lifeTime) / FADE_IN_TIME);
 			this.size = this.fontSize * p;
@@ -48,7 +47,12 @@ export class Character{
 		//文字を描画
 		let mosaic = this.cMosaic.mosaic;
 		for(let i = 0;i < mosaic.length;i++){
-			if(mosaic[i]){
+			if(mosaic[i] && func.rand(0,99) < 90){
+				if(func.rand(0,99) < 40){
+					ctx.fillStyle = "#ffffff";
+				}else{
+					ctx.fillStyle = this.fontColor;
+				}
 				let n = this.size / this.cMosaic.num;
 				let x = i % this.cMosaic.num * n - this.size / 2;
 				let y = Math.floor(i / this.cMosaic.num) * n - this.size / 2;
