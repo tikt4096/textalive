@@ -45,7 +45,7 @@ export class Fire{
 				if(i % (PARTICLE_COUNT / 3) === 0){
 					color = PARTICLE_COLOR[func.rand(0,PARTICLE_COLOR.length - 1)];
 				}
-				particleFunc(this.x,this.y,vx,vy,color,this.ctx);
+				particleFunc(this.x,this.y,vx,vy,color,2,this.ctx);
 			}
 			this.isRemove = true;
 		}
