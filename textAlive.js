@@ -3,6 +3,7 @@ import {Fire} from "./fire.js";
 import {Character} from "./character.js";
 import {Particle} from "./particle.js";
 import {Afterimage} from "./afterImage.js";
+import {Explosion} from "./explosion.js";
 
 const {Player,Ease} = TextAliveApp;
 
@@ -151,6 +152,14 @@ function onAppReady(app){
 	}
 }
 
+function mouseClick(e){
+	let canPos = canvas.getBoundingClientRect();
+	let x = e.pageX - canPos.left - window.pageXOffset;
+	let y = e.pageY - canPos.top - window.pageYOffset;
+	let exp = new Explosion(100,x,y,5,10,2,context);
+	particle = particle.concat(exp.run());
+}
+
 let request;
 
 function animation(){
@@ -187,16 +196,18 @@ function addCharacter(x,y,char,charInfo,ease,ctx){
 	particle.push(new Character(x,y,char,charInfo,ease,ctx));
 }
 
-function addParticle(x,y,vx,vy,color,ctx){
-	particle.push(new Particle(x,y,vx,vy,color,ctx));
+function addParticle(x,y,vx,vy,color,radius,ctx){
+	particle.push(new Particle(x,y,vx,vy,color,radius,ctx));
 }
 
 function onPlay(){
 	animation();
+	canvas.addEventListener("click",mouseClick);
 }
 
 function onPause(){
 	cancelAnimationFrame(request);
+	canvas.removeEventListener("click",mouseClick);
 }
 
 function onStop(){
