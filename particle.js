@@ -4,12 +4,13 @@ let canvasWidth,canvasHeight;
 let afterimageFunc;
 
 export class Particle{
-	constructor(x,y,vx,vy,color,ctx){
+	constructor(x,y,vx,vy,color,radius,ctx){
 		this.x = x;
 		this.y = y;
 		this.vx = vx;
 		this.vy = vy;
 		this.color = color;
+		this.radius = radius;
 		this.ctx = ctx;
 		this.lifeTime = 100;
 		this.isRemove = false;
@@ -32,9 +33,9 @@ export class Particle{
 		if(func.rand(0,100) < 60){
 			ctx.beginPath();
 			ctx.fillStyle = this.color;
-			ctx.arc(this.x,this.y,2,0,Math.PI * 2,false);
+			ctx.arc(this.x,this.y,this.radius,0,Math.PI * 2,false);
 			ctx.fill();
-			if(this.lifeTime % 2 === 0)afterimageFunc(this.x,this.y,this.color,2,this.ctx);
+			if(this.lifeTime % 2 === 0)afterimageFunc(this.x,this.y,this.color,this.radius,this.ctx);
 		}
 		ctx.globalAlpha = 1.0;
 	}
