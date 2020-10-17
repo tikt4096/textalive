@@ -13,7 +13,6 @@ const PARTICLE_COLOR = [
 let canvasHeight;
 let easeFunc = null;
 let afterimageFunc,characterFunc;
-let charInfo;
 
 export class Fire{
 	constructor(particleCount,x,y,targetYPos,char,duration,ctx){
@@ -37,7 +36,7 @@ export class Fire{
 		if(this.frameCount % 2 === 0)afterimageFunc(this.x,this.y,this.color,5,this.ctx);
 
 		if(p > 0.9){
-			characterFunc(this.x,this.y,this.char,charInfo,easeFunc,this.ctx);
+			characterFunc(this.x,this.y,this.char,easeFunc,this.ctx);
 			this.arr = this.arr.concat(this.exp.run(this.x,this.y));
 			this.isRemove = true;
 		}
@@ -59,14 +58,9 @@ export class Fire{
 		easeFunc = init.easeFunc;
 		characterFunc = init.characterFunc;
 		afterimageFunc = init.afterimageFunc;
-		charInfo = init.charInfo;
 	}
 
-	static setCanvasHeight(height){
+	static set setCanvasHeight(height){
 		canvasHeight = height;
-	}
-
-	static setCharInfo(paramCharInfo){
-		charInfo = paramCharInfo;
 	}
 }
