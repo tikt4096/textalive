@@ -11,19 +11,17 @@ const PARTICLE_COLOR = [
 ];
 
 export class Explosion{
-	constructor(count,x,y,min,max,radius,ctx){
+	constructor(count,min,max,radius,ctx){
 		this.count = count;
-		this.x = x;
-		this.y = y;
 		this.min = min;
 		this.max = max;
 		this.radius = radius;
 		this.ctx = ctx;
-		this.arr = [];
 	}
 
-	run(){
+	run(x,y){
 		let color = "";
+		let arr = [];
 		for(let i = 0;i < this.count;i++){
 			let ang = func.rand(0,360) / 180 * Math.PI;
 			let speed = func.rand(this.min,this.max);
@@ -32,8 +30,12 @@ export class Explosion{
 			if(i % Math.floor(this.count / 3) == 0){
 				color = PARTICLE_COLOR[func.rand(0,PARTICLE_COLOR.length - 1)];
 			}
-			this.arr.push(new Particle(this.x,this.y,vx,vy,color,this.radius,this.ctx));
+			arr.push(new Particle(x,y,vx,vy,color,this.radius,this.ctx));
 		}
-		return this.arr;
+		return arr;
+	}
+
+	set particleCount(count){
+		this.count = count;
 	}
 }
