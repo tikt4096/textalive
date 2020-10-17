@@ -1,6 +1,6 @@
 import * as func from "./function.js";
+import {Explosion} from "./explosion.js";
 
-const PARTICLE_COUNT = 120;
 const PARTICLE_COLOR = [
 	"#ff8800",
 	"#00ff88",
@@ -12,11 +12,11 @@ const PARTICLE_COLOR = [
 
 let canvasHeight;
 let easeFunc = null;
-let afterimageFunc,particleFunc,characterFunc;
+let afterimageFunc,characterFunc;
 let charInfo;
 
 export class Fire{
-	constructor(x,y,targetYPos,char,duration,ctx){
+	constructor(particleCount,x,y,targetYPos,char,duration,ctx){
 		this.x = x;
 		this.y = y;
 		this.targetYPos = targetYPos;
@@ -27,6 +27,8 @@ export class Fire{
 		this.isRemove = false;
 		this.frameCount = 0;
 		this.duration = duration;
+		this.exp = new Explosion(particleCount,5,10,2,this.ctx);
+		this.arr = [];
 	}
 
 	update(){
@@ -36,17 +38,7 @@ export class Fire{
 
 		if(p > 0.9){
 			characterFunc(this.x,this.y,this.char,charInfo,easeFunc,this.ctx);
-			let color;
-			for(let i = 0;i < PARTICLE_COUNT;i++){
-				let ang = Math.PI * Math.floor(Math.random() * 360) / 180;
-				let speed = func.rand(5,10);
-				let vx = Math.cos(ang) * speed;
-				let vy = Math.sin(ang) * speed;
-				if(i % (PARTICLE_COUNT / 3) === 0){
-					color = PARTICLE_COLOR[func.rand(0,PARTICLE_COLOR.length - 1)];
-				}
-				particleFunc(this.x,this.y,vx,vy,color,2,this.ctx);
-			}
+			this.arr = this.arr.concat(this.exp.run(this.x,this.y));
 			this.isRemove = true;
 		}
 
@@ -58,10 +50,13 @@ export class Fire{
 		this.frameCount++;
 	}
 
+	particleArr(){
+		return this.arr;
+	}
+
 	static init(init){
 		canvasHeight = init.canvasHeight;
 		easeFunc = init.easeFunc;
-		particleFunc = init.particleFunc;
 		characterFunc = init.characterFunc;
 		afterimageFunc = init.afterimageFunc;
 		charInfo = init.charInfo;
