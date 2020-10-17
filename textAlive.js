@@ -17,9 +17,11 @@ const controll = document.getElementById("controller");
 const fontSizeCtl = document.getElementById("font_size");
 const fontColorCtl = document.getElementById("font_color");
 const displayTimeCtl = document.getElementById("disply_time");
+const particleCountCtl = document.getElementById("particle_count");
 
 func.setRange(fontSizeCtl,10,300);
-func.setRange(displayTimeCtl,10,100);
+func.setRange(displayTimeCtl,5,100);
+func.setRange(particleCountCtl,50,120);
 
 resize();
 
@@ -29,6 +31,7 @@ const DEFAULT_FONT_COLOR = "#00FF88"; //フォントの色
 const DEFAULT_DURATION = 700; //文字出現までの時間(ms)
 const DEFAULT_WAIT = 40; //文字を表示する時間(f)
 const DEFAULT_FONT_FAMILY = "sans-serif"; //使用フォント
+const DEFAULT_PARTICLE_COUNT = 120;
 
 //現在値
 let fontSize = DEFAULT_FONT_SIZE;
@@ -37,10 +40,12 @@ let fontColor = DEFAULT_FONT_COLOR;
 let duration = DEFAULT_DURATION;
 let wait = DEFAULT_WAIT;
 let fontFamily = DEFAULT_FONT_FAMILY;
+let particleCount = DEFAULT_PARTICLE_COUNT;
 
 func.setValue(fontSizeCtl,fontSize);
 func.setValue(fontColorCtl,fontColor);
 func.setValue(displayTimeCtl,wait);
+func.setValue(particleCountCtl,particleCount);
 
 const player = new Player({
 	app: {
@@ -64,8 +69,15 @@ const player = new Player({
 				title: "文字の表示時間（フレーム）",
 				name: "displayTime",
 				className: "Slider",
-				params: [10,100],
+				params: [5,100],
 				initialValue: DEFAULT_WAIT
+			},
+			{
+				title: "パーティクル数",
+				name: "particleCount",
+				className: "Slider",
+				params: [50,120],
+				initialValue: DEFAULT_PARTICLE_COUNT
 			}
 		]
 	},
@@ -97,6 +109,7 @@ function resize(){
 	Particle.setCanvasHeight(canvas.height);
 }
 
+let fire = [];
 let particle = [];
 let initX = halfFontSize;
 
@@ -110,7 +123,6 @@ Fire.init({
 		size: fontSize,
 		family: fontFamily
 	},
-	particleFunc: addParticle,
 	characterFunc: addCharacter,
 	afterimageFunc: addAfterimage
 });
@@ -146,24 +158,40 @@ function onAppReady(app){
 			onAppParameterUpdate("displayTime",displayTimeCtl.value);
 			func.setNumber(displayTimeCtl);
 		});
+		particleCountCtl.addEventListener("input",()=>{
+			onAppParameterUpdate("particleCount",particleCountCtl.value);
+			func.setNumber(particleCountCtl);
+		});
 	}
 	if(!app.songUrl){ //デフォルトURL
 		player.createFromSongUrl("https://www.youtube.com/watch?v=XSLhsjepelI");
 	}
 }
 
+let ctrlBtn = document.getElementById("toggle_btn");
+let ctrl = document.querySelector(".controller");
+ctrlBtn.addEventListener("click",()=>{
+	ctrl.classList.toggle("ctrl_show");
+	if(ctrl.classList.contains("ctrl_show")){
+		ctrlBtn.textContent = "コントロールを非表示";
+	}else{
+		ctrlBtn.textContent = "コントロールを表示";
+	}
+});
+
+const exp = new Explosion(particleCount,5,10,2,context);
+//クリックイベント
 function mouseClick(e){
 	let canPos = canvas.getBoundingClientRect();
 	let x = e.pageX - canPos.left - window.pageXOffset;
 	let y = e.pageY - canPos.top - window.pageYOffset;
-	let exp = new Explosion(100,x,y,5,10,2,context);
-	particle = particle.concat(exp.run());
+	particle = particle.concat(exp.run(x,y));
 }
 
 let request;
+const push = Array.prototype.push;
 
 function animation(){
-	context.clearRect(0,0,canvas.width,canvas.height);
 	context.fillStyle = "#000000";
 	context.fillRect(0,0,canvas.width,canvas.height); //背景
 	let c = player.video.findChar(player.timer.position + duration);
@@ -173,7 +201,7 @@ function animation(){
 			let cx = initX;
 			let cy = canvas.height;
 			let targetYPos = func.rand(halfFontSize,canvas.height - halfFontSize); //最終的に到達する座標
-			particle.push(new Fire(cx,cy,targetYPos,c,duration,context));
+			fire.push(new Fire(particleCount,cx,cy,targetYPos,c,duration,context));
 			currentLyricIndex = index;
 			initX += fontSize;
 			if(initX + halfFontSize > canvas.width){
@@ -181,6 +209,12 @@ function animation(){
 			}
 		}
 	}
+	for(const f of fire){
+		f.update();
+		push.apply(particle,f.particleArr());
+	}
+	fire = fire.filter(f => !f.isRemove);
+
 	for(const p of particle){
 		p.update();
 	}
@@ -196,10 +230,6 @@ function addCharacter(x,y,char,charInfo,ease,ctx){
 	particle.push(new Character(x,y,char,charInfo,ease,ctx));
 }
 
-function addParticle(x,y,vx,vy,color,radius,ctx){
-	particle.push(new Particle(x,y,vx,vy,color,radius,ctx));
-}
-
 function onPlay(){
 	animation();
 	canvas.addEventListener("click",mouseClick);
@@ -211,7 +241,9 @@ function onPause(){
 }
 
 function onStop(){
-	onPause();
+	onPause();;
+	context.fillStyle = "#000000";
+	context.fillRect(0,0,canvas.width,canvas.height);
 }
 
 function onAppParameterUpdate(name,value){
@@ -226,6 +258,10 @@ function onAppParameterUpdate(name,value){
 			break;
 		case "displayTime":
 			wait = parseInt(value);
+			break;
+		case "particleCount":
+			particleCount = parseInt(value);
+			exp.particleCount = particleCount;
 			break;
 	}
 	Fire.setCharInfo({
