@@ -11,7 +11,7 @@ const canDiv = document.getElementById("container");
 const canvas = document.createElement("canvas");
 const context = canvas.getContext("2d");
 
-const controll = document.getElementById("controller");
+const controll = document.querySelector(".controll_cnt");
 
 //各コントロール
 const fontSizeCtl = document.getElementById("font_size");
@@ -19,11 +19,27 @@ const fontColorCtl = document.getElementById("font_color");
 const displayTimeCtl = document.getElementById("disply_time");
 const particleCountCtl = document.getElementById("particle_count");
 
-func.setRange(fontSizeCtl,10,300);
-func.setRange(displayTimeCtl,5,100);
-func.setRange(particleCountCtl,50,120);
+//下限と上限
+const RANGE_FONT = {
+	min: 10,
+	max: 110
+};
+const RANGE_WAIT = {
+	min: 5,
+	max: 100
+};
+const RANGE_PARTICLE = {
+	min: 10,
+	max: 120
+};
+
+func.setRange(fontSizeCtl,RANGE_FONT.min,RANGE_FONT.max);
+func.setRange(displayTimeCtl,RANGE_WAIT.min,RANGE_WAIT.max);
+func.setRange(particleCountCtl,RANGE_PARTICLE.min,RANGE_PARTICLE.max);
 
 resize();
+context.fillStyle = "#000000";
+context.fillRect(0,0,canvas.width,canvas.height);
 
 //デフォルト値
 const DEFAULT_FONT_SIZE = 90; //フォントサイズ(px)
@@ -31,7 +47,7 @@ const DEFAULT_FONT_COLOR = "#00FF88"; //フォントの色
 const DEFAULT_DURATION = 700; //文字出現までの時間(ms)
 const DEFAULT_WAIT = 40; //文字を表示する時間(f)
 const DEFAULT_FONT_FAMILY = "sans-serif"; //使用フォント
-const DEFAULT_PARTICLE_COUNT = 120;
+const DEFAULT_PARTICLE_COUNT = 50;
 
 //現在値
 let fontSize = DEFAULT_FONT_SIZE;
@@ -56,7 +72,7 @@ const player = new Player({
 				title: "フォントサイズ",
 				name: "fontSize",
 				className: "Slider",
-				params: [10,300],
+				params: [RANGE_FONT.min,RANGE_FONT.max],
 				initialValue: DEFAULT_FONT_SIZE
 			},
 			{
@@ -69,14 +85,14 @@ const player = new Player({
 				title: "文字の表示時間（フレーム）",
 				name: "displayTime",
 				className: "Slider",
-				params: [5,100],
+				params: [RANGE_WAIT.min,RANGE_WAIT.max],
 				initialValue: DEFAULT_WAIT
 			},
 			{
 				title: "パーティクル数",
 				name: "particleCount",
 				className: "Slider",
-				params: [50,120],
+				params: [RANGE_PARTICLE.min,RANGE_PARTICLE.max],
 				initialValue: DEFAULT_PARTICLE_COUNT
 			}
 		]
@@ -104,25 +120,25 @@ function canvasInit(){
 function resize(){
 	canvas.width = canDiv.clientWidth;
 	canvas.height = document.documentElement.clientHeight;
-	Fire.setCanvasHeight(canvas.height);
-	Particle.setCanvasWidth(canvas.width);
-	Particle.setCanvasHeight(canvas.height);
+	Fire.setCanvasHeight = canvas.height;
+	Particle.setCanvasWidth = canvas.width;
+	Particle.setCanvasHeight = canvas.height;
 }
 
 let fire = [];
 let particle = [];
 let initX = halfFontSize;
+let charInfo = {
+	wait: wait,
+	color: fontColor,
+	size: fontSize,
+	family: fontFamily
+};
 
 Fire.init({
 	canvasWidth: canvas.width,
 	canvasHeight: canvas.height,
 	easeFunc: Ease.circOut,
-	charInfo:{
-		wait: wait,
-		color: fontColor,
-		size: fontSize,
-		family: fontFamily
-	},
 	characterFunc: addCharacter,
 	afterimageFunc: addAfterimage
 });
@@ -190,6 +206,7 @@ function mouseClick(e){
 
 let request;
 const push = Array.prototype.push;
+let prevY = func.rand(halfFontSize,canvas.height - halfFontSize); //初期値は適当に
 
 function animation(){
 	context.fillStyle = "#000000";
@@ -198,15 +215,16 @@ function animation(){
 	if(c !== null){
 		let index = player.video.findIndex(c);
 		if(currentLyricIndex != index){
-			let cx = initX;
-			let cy = canvas.height;
-			let targetYPos = func.rand(halfFontSize,canvas.height - halfFontSize); //最終的に到達する座標
-			fire.push(new Fire(particleCount,cx,cy,targetYPos,c,duration,context));
+			let min = Math.max(prevY - fontSize - halfFontSize,halfFontSize);
+			let max = Math.min(prevY + fontSize + halfFontSize,canvas.height - halfFontSize);
+			let targetYPos = func.rand(min,max); //最終的に到達する座標
+			fire.push(new Fire(particleCount,initX,canvas.height,targetYPos,c,duration,context));
 			currentLyricIndex = index;
 			initX += fontSize;
 			if(initX + halfFontSize > canvas.width){
 				initX = halfFontSize;
 			}
+			prevY = targetYPos;
 		}
 	}
 	for(const f of fire){
@@ -226,7 +244,7 @@ function addAfterimage(x,y,color,radius,ctx){
 	particle.push(new Afterimage(x,y,color,radius,ctx));
 }
 
-function addCharacter(x,y,char,charInfo,ease,ctx){
+function addCharacter(x,y,char,ease,ctx){
 	particle.push(new Character(x,y,char,charInfo,ease,ctx));
 }
 
@@ -241,7 +259,9 @@ function onPause(){
 }
 
 function onStop(){
-	onPause();;
+	onPause();
+	fire = [];
+	particle = [];
 	context.fillStyle = "#000000";
 	context.fillRect(0,0,canvas.width,canvas.height);
 }
@@ -251,23 +271,19 @@ function onAppParameterUpdate(name,value){
 		case "fontSize":
 			fontSize = parseInt(value);
 			halfFontSize = fontSize / 2;
-			context.font = fontSize + "px sans-serif";
+			charInfo.size = fontSize;
 			break;
 		case "fontColor":
 			fontColor = func.colorToString(value);
+			charInfo.color = fontColor;
 			break;
 		case "displayTime":
 			wait = parseInt(value);
+			charInfo.wait = wait;
 			break;
 		case "particleCount":
 			particleCount = parseInt(value);
 			exp.particleCount = particleCount;
 			break;
 	}
-	Fire.setCharInfo({
-			wait: wait,
-			size: fontSize,
-			color: fontColor,
-			family: fontFamily
-	});
 }
