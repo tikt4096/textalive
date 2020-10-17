@@ -8,25 +8,33 @@
 		<title>textAlive</title>
 	</head>
 	<body>
-		<div id="controller">
-			<table>
-				<tbody>
-					<tr>
-						<th>フォントサイズ</th>
-						<td><input type="range" id="font_size" value="0"></td>
-						<td id="font_size_num">0</td>
-					</tr>
-					<tr>
-						<th>フォントの色</th>
-						<td><input type="text" id="font_color" value="#000000"></td>
-					</tr>
-					<tr>
-						<th>表示時間（フレーム）</th>
-						<td><input type="range" id="disply_time" value="0"></td>
-						<td id="disply_time_num">0</td>
-					</tr>
-				</tbody>
-			</table>
+		<div class="controll_cnt">
+			<div class="controller">
+				<table>
+					<tbody>
+						<tr>
+							<th>フォントサイズ</th>
+							<td><input type="range" id="font_size" value="0"></td>
+							<td id="font_size_num">0</td>
+						</tr>
+						<tr>
+							<th>フォントの色</th>
+							<td><input type="text" id="font_color" value="#000000"></td>
+						</tr>
+						<tr>
+							<th>表示時間（フレーム）</th>
+							<td><input type="range" id="disply_time" value="0"></td>
+							<td id="disply_time_num">0</td>
+						</tr>
+						<tr>
+							<th>パーティクル数</th>
+							<td><input type="range" id="particle_count" value="0"></td>
+							<td id="particle_count_num">0</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="toggle_btn">コントロールを表示</div>
 		</div>
 		<div id="container"></div>
 		<div id="media"></div>
