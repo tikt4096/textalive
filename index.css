@@ -7,16 +7,44 @@ body{
 	margin: 0 auto;
 }
 
-#controller{
+.controll_cnt{
 	width: 30em;
-	padding: 0.5em;
 	position: fixed;
 	right: 0;
 	top: 0;
-	opacity: 0.7;
 	background-color: #808080;
+	opacity: 0.6;
 }
 
-#controller th{
+.controll_cnt:hover{
+	opacity: 1.0;
+}
+
+.controller{
+	padding: 0.5em;
+	display: none;
+}
+
+.ctrl_show{
+	display: block;
+}
+
+.controller th{
 	text-align: left;
+}
+
+#toggle_btn{
+	background-color: #808080;
+	border: 1px solid #202020;
+	text-align: center;
+	padding: 0.2em;
+	cursor: pointer;
+}
+
+#toggle_btn:hover{
+	background-color: #f0f0f0;
+}
+
+#toggle_btn:active{
+	background-color: #303030;
 }
