@@ -46,11 +46,11 @@ export class Particle{
 		afterimageFunc = init.afterimageFunc;
 	}
 
-	static setCanvasWidth(width){
+	static set setCanvasWidth(width){
 		canvasWidth = width;
 	}
 
-	static setCanvasHeight(height){
+	static set setCanvasHeight(height){
 		canvasHeight = height;
 	}
 }
