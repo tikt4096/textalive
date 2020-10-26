@@ -104,8 +104,6 @@ context.fillStyle = "#000000";
 context.fillRect(0,0,canvas.width,canvas.height);
 canDiv.appendChild(canvas);
 
-let currentLyricIndex = -1;
-
 //リサイズ時のイベント登録
 window.addEventListener("resize",()=>{
 	resize();
@@ -153,36 +151,97 @@ Particle.init({
 
 //イベント関連
 player.addListener({
-	onAppReady,
-	onPlay,
-	onPause,
-	onStop,
+	onAppReady(app){
+		if(app.managed){
+			controll.style.display = "none";
+		}else{
+			//イベントリスナ登録
+			fontSizeCtl.addEventListener("input",()=>{
+				onAppParameterUpdate("fontSize",fontSizeCtl.value);
+				func.setNumber(fontSizeCtl);
+			});
+			fontColorCtl.addEventListener("change",()=>{
+				onAppParameterUpdate("fontColor",fontColorCtl.value);
+			});
+			displayTimeCtl.addEventListener("input",()=>{
+				onAppParameterUpdate("displayTime",displayTimeCtl.value);
+				func.setNumber(displayTimeCtl);
+			});
+			particleCountCtl.addEventListener("input",()=>{
+				onAppParameterUpdate("particleCount",particleCountCtl.value);
+				func.setNumber(particleCountCtl);
+			});
+		}
+		if(!app.songUrl){ //デフォルトURL
+			player.createFromSongUrl("https://www.youtube.com/watch?v=XSLhsjepelI");
+		}
+	},
+	onPlay(){
+		animation();
+		canvas.addEventListener("click",mouseClick);
+	},
+	onPause(){
+		cancelAnimationFrame(request);
+		canvas.removeEventListener("click",mouseClick);
+	},
+	onStop(){
+		cancelAnimationFrame(request);
+		canvas.removeEventListener("click",mouseClick);
+		fire = [];
+		particle = [];
+		context.fillStyle = "#000000";
+		context.fillRect(0,0,canvas.width,canvas.height);
+	},
 	onAppParameterUpdate,
+	onAppMediaChange(){
+		cancelAnimationFrame(request);
+		fire = [];
+		particle = [];
+		context.fillStyle = "#000000";
+		context.fillRect(0,0,canvas.width,canvas.height);
+	},
+	onTimeUpdate,
 });
 
-function onAppReady(app){
-	if(app.managed){
-		controll.style.display = "none";
-	}else{
-		//イベントリスナ登録
-		fontSizeCtl.addEventListener("input",()=>{
-			onAppParameterUpdate("fontSize",fontSizeCtl.value);
-			func.setNumber(fontSizeCtl);
-		});
-		fontColorCtl.addEventListener("change",()=>{
-			onAppParameterUpdate("fontColor",fontColorCtl.value);
-		});
-		displayTimeCtl.addEventListener("input",()=>{
-			onAppParameterUpdate("displayTime",displayTimeCtl.value);
-			func.setNumber(displayTimeCtl);
-		});
-		particleCountCtl.addEventListener("input",()=>{
-			onAppParameterUpdate("particleCount",particleCountCtl.value);
-			func.setNumber(particleCountCtl);
-		});
+function onAppParameterUpdate(name,value){
+	switch(name){
+		case "fontSize":
+			fontSize = parseInt(value);
+			halfFontSize = fontSize / 2;
+			charInfo.size = fontSize;
+			break;
+		case "fontColor":
+			fontColor = func.colorToString(value);
+			charInfo.color = fontColor;
+			break;
+		case "displayTime":
+			wait = parseInt(value);
+			charInfo.wait = wait;
+			break;
+		case "particleCount":
+			particleCount = parseInt(value);
+			exp.particleCount = particleCount;
+			break;
 	}
-	if(!app.songUrl){ //デフォルトURL
-		player.createFromSongUrl("https://www.youtube.com/watch?v=XSLhsjepelI");
+}
+
+let currentChar;
+function onTimeUpdate(position){
+	let current = currentChar || player.video.firstChar;
+	while(current && current.startTime < position + duration){
+		if(currentChar !== current){
+			let min = Math.max(prevY - fontSize - halfFontSize,halfFontSize);
+			let max = Math.min(prevY + fontSize + halfFontSize,maxY);
+			let targetYPos = func.rand(min,max); //最終的に到達する座標
+			fire.push(new Fire(particleCount,initX,canvas.height,targetYPos,current.text,duration,context));
+			currentChar = current;
+			initX += fontSize;
+			if(initX + halfFontSize > canvas.width){
+				initX = halfFontSize;
+			}
+			prevY = targetYPos;
+		}
+		current = current.next;
 	}
 }
 
@@ -213,22 +272,6 @@ let prevY = func.rand(halfFontSize,maxY); //初期値は適当に
 function animation(){
 	context.fillStyle = "#000000";
 	context.fillRect(0,0,canvas.width,canvas.height); //背景
-	let c = player.video.findChar(player.timer.position + duration);
-	if(c !== null){
-		let index = player.video.findIndex(c);
-		if(currentLyricIndex != index){
-			let min = Math.max(prevY - fontSize - halfFontSize,halfFontSize);
-			let max = Math.min(prevY + fontSize + halfFontSize,maxY);
-			let targetYPos = func.rand(min,max); //最終的に到達する座標
-			fire.push(new Fire(particleCount,initX,canvas.height,targetYPos,c,duration,context));
-			currentLyricIndex = index;
-			initX += fontSize;
-			if(initX + halfFontSize > canvas.width){
-				initX = halfFontSize;
-			}
-			prevY = targetYPos;
-		}
-	}
 	for(const f of fire){
 		f.update();
 		push.apply(particle,f.particleArr());
@@ -248,44 +291,4 @@ function addAfterimage(x,y,color,radius,ctx){
 
 function addCharacter(x,y,char,ease,ctx){
 	particle.push(new Character(x,y,char,charInfo,ease,ctx));
-}
-
-function onPlay(){
-	animation();
-	canvas.addEventListener("click",mouseClick);
-}
-
-function onPause(){
-	cancelAnimationFrame(request);
-	canvas.removeEventListener("click",mouseClick);
-}
-
-function onStop(){
-	onPause();
-	fire = [];
-	particle = [];
-	context.fillStyle = "#000000";
-	context.fillRect(0,0,canvas.width,canvas.height);
-}
-
-function onAppParameterUpdate(name,value){
-	switch(name){
-		case "fontSize":
-			fontSize = parseInt(value);
-			halfFontSize = fontSize / 2;
-			charInfo.size = fontSize;
-			break;
-		case "fontColor":
-			fontColor = func.colorToString(value);
-			charInfo.color = fontColor;
-			break;
-		case "displayTime":
-			wait = parseInt(value);
-			charInfo.wait = wait;
-			break;
-		case "particleCount":
-			particleCount = parseInt(value);
-			exp.particleCount = particleCount;
-			break;
-	}
 }
