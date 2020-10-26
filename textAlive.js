@@ -11,6 +11,8 @@ const canDiv = document.getElementById("container");
 const canvas = document.createElement("canvas");
 const context = canvas.getContext("2d");
 
+let maxY = 0; //文字出現のY座標上限値
+
 const controll = document.querySelector(".controll_cnt");
 
 //各コントロール
@@ -36,10 +38,6 @@ const RANGE_PARTICLE = {
 func.setRange(fontSizeCtl,RANGE_FONT.min,RANGE_FONT.max);
 func.setRange(displayTimeCtl,RANGE_WAIT.min,RANGE_WAIT.max);
 func.setRange(particleCountCtl,RANGE_PARTICLE.min,RANGE_PARTICLE.max);
-
-resize();
-context.fillStyle = "#000000";
-context.fillRect(0,0,canvas.width,canvas.height);
 
 //デフォルト値
 const DEFAULT_FONT_SIZE = 90; //フォントサイズ(px)
@@ -100,7 +98,10 @@ const player = new Player({
 	mediaElement: document.querySelector("#media")
 });
 
+resize();
 canvasInit();
+context.fillStyle = "#000000";
+context.fillRect(0,0,canvas.width,canvas.height);
 canDiv.appendChild(canvas);
 
 let currentLyricIndex = -1;
@@ -123,6 +124,7 @@ function resize(){
 	Fire.setCanvasHeight = canvas.height;
 	Particle.setCanvasWidth = canvas.width;
 	Particle.setCanvasHeight = canvas.height;
+	maxY = canvas.height - canvas.height / 3 - halfFontSize;
 }
 
 let fire = [];
@@ -206,7 +208,7 @@ function mouseClick(e){
 
 let request;
 const push = Array.prototype.push;
-let prevY = func.rand(halfFontSize,canvas.height - halfFontSize); //初期値は適当に
+let prevY = func.rand(halfFontSize,maxY); //初期値は適当に
 
 function animation(){
 	context.fillStyle = "#000000";
@@ -216,7 +218,7 @@ function animation(){
 		let index = player.video.findIndex(c);
 		if(currentLyricIndex != index){
 			let min = Math.max(prevY - fontSize - halfFontSize,halfFontSize);
-			let max = Math.min(prevY + fontSize + halfFontSize,canvas.height - halfFontSize);
+			let max = Math.min(prevY + fontSize + halfFontSize,maxY);
 			let targetYPos = func.rand(min,max); //最終的に到達する座標
 			fire.push(new Fire(particleCount,initX,canvas.height,targetYPos,c,duration,context));
 			currentLyricIndex = index;
