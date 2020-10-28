@@ -36,7 +36,8 @@ export class Fire{
 		if(this.frameCount % 2 === 0)afterimageFunc(this.x,this.y,this.color,5,this.ctx);
 
 		if(p > 0.9){
-			characterFunc(this.x,this.y,this.char,easeFunc,this.ctx);
+			if(this.char !== null)characterFunc(this.x,this.y,this.char,easeFunc,this.ctx);
+			
 			this.arr = this.arr.concat(this.exp.run(this.x,this.y));
 			this.isRemove = true;
 		}
