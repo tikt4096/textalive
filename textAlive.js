@@ -12,6 +12,8 @@ const canvas = document.createElement("canvas");
 const context = canvas.getContext("2d");
 
 let maxY = 0; //文字出現のY座標上限値
+let currentChar; //現在の発話中の文字
+let lastLaunchTime = 0; //最後に打ち上げた時間(ms)
 
 const controll = document.querySelector(".controll_cnt");
 
@@ -100,14 +102,17 @@ const player = new Player({
 
 resize();
 canvasInit();
-context.fillStyle = "#000000";
-context.fillRect(0,0,canvas.width,canvas.height);
+
+let background = createGradient();
+drawBackground(background);
 canDiv.appendChild(canvas);
 
 //リサイズ時のイベント登録
 window.addEventListener("resize",()=>{
 	resize();
 	canvasInit();
+	background = createGradient();
+	drawBackground(background);
 });
 
 function canvasInit(){
@@ -123,6 +128,23 @@ function resize(){
 	Particle.setCanvasWidth = canvas.width;
 	Particle.setCanvasHeight = canvas.height;
 	maxY = canvas.height - canvas.height / 3 - halfFontSize;
+}
+
+//グラデーション作成
+function createGradient(){
+	let background  = context.createLinearGradient(0,0,0,canvas.height);
+	background.addColorStop(0.0,"#000000");
+	background.addColorStop(0.9,"#004455");
+	background.addColorStop(1.0,"#336688");
+	return background;
+}
+
+//背景描画
+function drawBackground(background){
+	context.beginPath();
+	context.fillStyle = background;
+	context.rect(0,0,canvas.width,canvas.height);
+	context.fill();
 }
 
 let fire = [];
@@ -189,16 +211,16 @@ player.addListener({
 		canvas.removeEventListener("click",mouseClick);
 		fire = [];
 		particle = [];
-		context.fillStyle = "#000000";
-		context.fillRect(0,0,canvas.width,canvas.height);
+		currentChar = undefined;
+		drawBackground(background);
 	},
 	onAppParameterUpdate,
 	onAppMediaChange(){
 		cancelAnimationFrame(request);
 		fire = [];
 		particle = [];
-		context.fillStyle = "#000000";
-		context.fillRect(0,0,canvas.width,canvas.height);
+		currentChar = undefined;
+		drawBackground(background);
 	},
 	onTimeUpdate,
 });
@@ -225,26 +247,43 @@ function onAppParameterUpdate(name,value){
 	}
 }
 
-let currentChar;
 function onTimeUpdate(position){
+	if(!player.video.firstChar)return;
+
+	if(currentChar && currentChar.startTime > position + duration)currentChar = player.video.findChar(position);
+
 	let current = currentChar || player.video.firstChar;
+
+	let count = 0;
 	while(current && current.startTime < position + duration){
 		if(currentChar !== current){
-			let min = Math.max(prevY - fontSize - halfFontSize,halfFontSize);
-			let max = Math.min(prevY + fontSize + halfFontSize,maxY);
-			let targetYPos = func.rand(min,max); //最終的に到達する座標
-			fire.push(new Fire(particleCount,initX,canvas.height,targetYPos,current.text,duration,context));
-			currentChar = current;
-			initX += fontSize;
-			if(initX + halfFontSize > canvas.width){
-				initX = halfFontSize;
+			if(count < 1){
+				let min = Math.max(prevY - fontSize - halfFontSize,halfFontSize);
+				let max = Math.min(prevY + fontSize + halfFontSize,maxY);
+				let targetYPos = func.rand(min,max); //最終的に到達する座標
+				fire.push(new Fire(particleCount,initX,canvas.height,targetYPos,current.text,duration,context));
+				currentChar = current;
+				initX += fontSize;
+				if(initX + halfFontSize > canvas.width){
+					initX = halfFontSize;
+				}
+				prevY = targetYPos;
+			}else{
+				currentChar = current;
 			}
-			prevY = targetYPos;
+			count++;
 		}
 		current = current.next;
 	}
+
+	if(Date.now() - lastLaunchTime > 600 && (!currentChar || !currentChar.next || currentChar.next.startTime - currentChar.endTime > 5000)){
+		let targetYPos = func.rand(0,maxY); //最終的に到達する座標
+		fire.push(new Fire(particleCount,func.rand(0,canvas.width),canvas.height,targetYPos,null,duration,context));
+		lastLaunchTime = Date.now();
+	}
 }
 
+//クリックイベント
 let ctrlBtn = document.getElementById("toggle_btn");
 let ctrl = document.querySelector(".controller");
 ctrlBtn.addEventListener("click",()=>{
@@ -269,9 +308,9 @@ let request;
 const push = Array.prototype.push;
 let prevY = func.rand(halfFontSize,maxY); //初期値は適当に
 
+//アニメーション処理
 function animation(){
-	context.fillStyle = "#000000";
-	context.fillRect(0,0,canvas.width,canvas.height); //背景
+	drawBackground(background);
 	for(const f of fire){
 		f.update();
 		push.apply(particle,f.particleArr());
@@ -281,7 +320,7 @@ function animation(){
 	for(const p of particle){
 		p.update();
 	}
-	particle = particle.filter(par => !par.isRemove); //頂点に達したか範囲外のパーティクルは消去
+	particle = particle.filter(par => !par.isRemove); //範囲外のパーティクルは消去
 	request = requestAnimationFrame(animation);
 }
 
