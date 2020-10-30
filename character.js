@@ -22,7 +22,7 @@ export class Character{
 		this.size = 0;
 		this.easeFunc = ease;
 		this.ctx = ctx;
-		this.mosaic = new Mosaic(MOSAIC_SIZE,this.fontSize);
+		this.mosaic = new Mosaic(MOSAIC_SIZE,this.fontSize,this.fontFamily);
 		this.cMosaic = this.mosaic.makeCharMosaic(this.char);
 		this.pSize = Math.floor(this.fontSize / this.cMosaic.num);
 	}
