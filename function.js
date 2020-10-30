@@ -37,3 +37,10 @@ export function setRange(element,min,max){
 export function rand(min,max){
 	return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
+
+export function addComboboxItem(combobox,itemValue,itemName){
+	let option = document.createElement("option");
+	option.value = itemValue;
+	option.textContent = itemName;
+	combobox.appendChild(option);
+}
