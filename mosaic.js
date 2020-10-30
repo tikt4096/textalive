@@ -1,5 +1,5 @@
 export class Mosaic{
-	constructor(divSize,size){
+	constructor(divSize,size,fontFamily){
 		this.canvas = document.createElement("canvas");
 		this.ctx = this.canvas.getContext("2d");
 		this.divSize = divSize;
@@ -7,13 +7,14 @@ export class Mosaic{
 		this.fontSize = size;
 		this.canvas.width = this.fontSize + ((this.fontSize % this.divSize) ? this.divSize - this.fontSize % this.divSize : 0);
 		this.canvas.height = this.fontSize + ((this.fontSize % this.divSize) ? this.divSize - this.fontSize % this.divSize : 0);
-		this.ctx.font = size + "px sans-serif";
+		this.ctx.font = size + "px " + fontFamily;
 		this.ctx.textAlign = "left";
 		this.ctx.textBaseline = "top";
 		this.ctx.fillStyle = "#ffffff";
 		this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
 		this.ctx.fillStyle = "#000000";
 	}
+	
 	makeCharMosaic(char){
 		this.ctx.fillText(char,0,0);
 		let num = this.canvas.width / this.divSize;
