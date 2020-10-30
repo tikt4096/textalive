@@ -22,10 +22,11 @@ const fontSizeCtl = document.getElementById("font_size");
 const fontColorCtl = document.getElementById("font_color");
 const displayTimeCtl = document.getElementById("disply_time");
 const particleCountCtl = document.getElementById("particle_count");
+const fontFamilyCtl = document.getElementById("font_family");
 
 //下限と上限
 const RANGE_FONT = {
-	min: 10,
+	min: 30,
 	max: 110
 };
 const RANGE_WAIT = {
@@ -40,6 +41,31 @@ const RANGE_PARTICLE = {
 func.setRange(fontSizeCtl,RANGE_FONT.min,RANGE_FONT.max);
 func.setRange(displayTimeCtl,RANGE_WAIT.min,RANGE_WAIT.max);
 func.setRange(particleCountCtl,RANGE_PARTICLE.min,RANGE_PARTICLE.max);
+
+const fontFamilys = [
+	"sans-serif",
+	//windows
+	"MS PGothic",
+	"MS Gothic",
+	"MS PMincho",
+	"MS Mincho",
+	"Meiryo",
+	"Yu Gothic",
+	"Yu Mincho",
+	//mac / ios
+	"Hiragino Kaku Gothic Pro",
+	"Hiragino Kaku Gothic ProN",
+	"HiraKakuPro-W6",
+	"HiraKakuProN-W6",
+	"Hiragino Mincho Pro",
+	"Hiragino Mincho ProN",
+	"HiraMinPro-W6",
+	"YuGothic",
+	"YuMincho",
+	//android
+	"Droid Sans",
+	"Roboto"
+];
 
 //デフォルト値
 const DEFAULT_FONT_SIZE = 90; //フォントサイズ(px)
@@ -94,8 +120,15 @@ const player = new Player({
 				className: "Slider",
 				params: [RANGE_PARTICLE.min,RANGE_PARTICLE.max],
 				initialValue: DEFAULT_PARTICLE_COUNT
+			},
+			{
+				title: "フォント",
+				name: "font",
+				className: "Select",
+				params: fontFamilys,
+				initialValue: DEFAULT_FONT_FAMILY
 			}
-		]
+		],
 	},
 	mediaElement: document.querySelector("#media")
 });
@@ -177,6 +210,9 @@ player.addListener({
 		if(app.managed){
 			controll.style.display = "none";
 		}else{
+			for(const font of fontFamilys){
+				func.addComboboxItem(fontFamilyCtl,font,font);
+			}
 			//イベントリスナ登録
 			fontSizeCtl.addEventListener("input",()=>{
 				onAppParameterUpdate("fontSize",fontSizeCtl.value);
@@ -192,6 +228,9 @@ player.addListener({
 			particleCountCtl.addEventListener("input",()=>{
 				onAppParameterUpdate("particleCount",particleCountCtl.value);
 				func.setNumber(particleCountCtl);
+			});
+			fontFamilyCtl.addEventListener("change",()=>{
+				onAppParameterUpdate("font",fontFamilyCtl.value);
 			});
 		}
 		if(!app.songUrl){ //デフォルトURL
@@ -244,6 +283,10 @@ function onAppParameterUpdate(name,value){
 			particleCount = parseInt(value);
 			exp.particleCount = particleCount;
 			break;
+		case "font":
+			fontFamily = value;
+			charInfo.family = fontFamily;
+			break;
 	}
 }
 
@@ -257,7 +300,7 @@ function onTimeUpdate(position){
 	let count = 0;
 	while(current && current.startTime < position + duration){
 		if(currentChar !== current){
-			if(count < 1){
+			if(count < 3){ //時間が進む方向にシークされたときの制限
 				let min = Math.max(prevY - fontSize - halfFontSize,halfFontSize);
 				let max = Math.min(prevY + fontSize + halfFontSize,maxY);
 				let targetYPos = func.rand(min,max); //最終的に到達する座標
