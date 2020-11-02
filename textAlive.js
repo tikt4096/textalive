@@ -92,7 +92,7 @@ func.setValue(particleCountCtl,particleCount);
 
 const player = new Player({
 	app: {
-		appAuthor: "ToykoItomimizu",
+		appAuthor: "Zen",
 		appName: "hanabi",
 		parameters:[
 			{
