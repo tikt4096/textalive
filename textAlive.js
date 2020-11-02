@@ -250,18 +250,13 @@ player.addListener({
 	onStop(){
 		cancelAnimationFrame(request);
 		canvas.removeEventListener("click",mouseClick);
-		fire = [];
-		particle = [];
-		currentChar = undefined;
-		drawBackground(background);
+		videoStopAfter();
 	},
 	onAppParameterUpdate,
 	onAppMediaChange(){
 		cancelAnimationFrame(request);
-		fire = [];
-		particle = [];
-		currentChar = undefined;
-		drawBackground(background);
+		canvas.removeEventListener("click",mouseClick);
+		videoStopAfter();
 	},
 	onTimeUpdate,
 });
@@ -328,6 +323,14 @@ function onTimeUpdate(position){
 	}
 }
 
+//再生停止後の処理
+function videoStopAfter(){
+	fire = [];
+	particle = [];
+	currentChar = undefined;
+	drawBackground(background);
+}
+
 //クリックイベント
 let ctrlBtn = document.getElementById("toggle_btn");
 let ctrl = document.querySelector(".controller");
@@ -351,14 +354,12 @@ playBtn.addEventListener("click",()=>{
 });
 
 stopBtn.addEventListener("click",()=>{
-	if(player.isPlaying){
-		player.requestStop();
-		playBtn.textContent = "再生";
-	}
+	player.requestStop();
+	playBtn.textContent = "再生";
+	if(!player.isPlaying)videoStopAfter();
 });
 
 const exp = new Explosion(particleCount,5,10,2,context);
-//クリックイベント
 function mouseClick(e){
 	let canPos = canvas.getBoundingClientRect();
 	let x = e.pageX - canPos.left - window.pageXOffset;
