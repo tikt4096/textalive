@@ -15,7 +15,8 @@ let maxY = 0; //文字出現のY座標上限値
 let currentChar; //現在の発話中の文字
 let lastLaunchTime = 0; //最後に打ち上げた時間(ms)
 
-const controll = document.querySelector(".controll_cnt");
+const playBtn = document.querySelector(".play");
+const stopBtn = document.querySelector(".stop");
 
 //各コントロール
 const fontSizeCtl = document.getElementById("font_size");
@@ -208,7 +209,8 @@ Particle.init({
 player.addListener({
 	onAppReady(app){
 		if(app.managed){
-			controll.style.display = "none";
+			document.querySelector(".controll_cnt").style.display = "none";
+			document.querySelector(".video_ctrl").style.display = "none";
 		}else{
 			for(const font of fontFamilys){
 				func.addComboboxItem(fontFamilyCtl,font,font);
@@ -335,6 +337,23 @@ ctrlBtn.addEventListener("click",()=>{
 		ctrlBtn.textContent = "コントロールを非表示";
 	}else{
 		ctrlBtn.textContent = "コントロールを表示";
+	}
+});
+
+playBtn.addEventListener("click",()=>{
+	if(player.isPlaying){
+		player.requestPause();
+		playBtn.textContent = "再生";
+	}else{
+		player.requestPlay();
+		playBtn.textContent = "一時停止";
+	}
+});
+
+stopBtn.addEventListener("click",()=>{
+	if(player.isPlaying){
+		player.requestStop();
+		playBtn.textContent = "再生";
 	}
 });
 

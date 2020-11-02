@@ -1,5 +1,6 @@
 body{
 	margin: 0;
+	font-family: 'Avenir','Helvetica Neue','Helvetica','Arial','Hiragino Sans','ヒラギノ角ゴシック','YuGothic','Yu Gothic','メイリオ', 'Meiryo','ＭＳ Ｐゴシック','MS PGothic'
 }
 
 #container{
@@ -47,4 +48,35 @@ body{
 
 #toggle_btn:active{
 	background-color: #303030;
+}
+
+.video_ctrl{
+	background-color: #808080;
+	padding: 0.1em 0.5em;
+	display: flex;
+	position: fixed;
+	left: 0;
+	top: 0;
+	opacity: 0.6;
+}
+
+.video_ctrl:hover{
+	opacity: 1.0;	
+}
+
+.play,.stop{
+	background-color: #f0f0f0;
+	padding: 0.2em 0.5em;
+	margin: 0 0.2em;
+	color: #0f0f0f;
+	border: 1px solid #00aaff;
+	cursor: pointer;
+}
+
+.play:hover,.stop:hover{
+	background-color: #ffffff;
+}
+
+.play:active,.stop:active{
+	background-color: #e0e0e0;
 }
