@@ -1,4 +1,4 @@
-# textalive
+# textalive 打ち上げ花火
 TextAliveプログラミングコンテスト応募作品
 
 ![out](https://user-images.githubusercontent.com/22471049/97843225-4480f280-1d2c-11eb-8f0a-2c6e5d2a7ab7.gif)
@@ -22,3 +22,5 @@ https://drive.google.com/file/d/1p2og_uR0taO_mgq42tarvDwqUXxRxG3s/view?usp=shari
 
 ## 注意事項
 ローカルでは実行できないので、サーバを立てて実行する必要があります。
+
+プログラミングに関してはほぼ素人なので、おそらく変なコードになっていると思いますが何卒ご容赦ください。
