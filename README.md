@@ -6,9 +6,11 @@ TextAliveプログラミングコンテスト応募作品
 
 ![launch2](https://user-images.githubusercontent.com/22471049/97702335-2a5bd000-1af2-11eb-9afa-cd8f994c889f.png)
 
-## 動作デモ（動画）
+## 動作デモ
+### 動画
 https://drive.google.com/file/d/1p2og_uR0taO_mgq42tarvDwqUXxRxG3s/view?usp=sharing
-
+### デモページ
+https://tikt4096.github.io/textalive/
 
 ## 変更可能なパラメータ
 - フォントサイズ
